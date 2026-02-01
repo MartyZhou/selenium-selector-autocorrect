@@ -4,9 +4,13 @@ import json
 import logging
 import os
 import re
-from typing import Any, Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
 
-from .ai_providers import get_provider
+from .ai_providers import AIProvider, get_provider
+
+if TYPE_CHECKING:
+    from selenium.webdriver.remote.webdriver import WebDriver
+    from selenium.webdriver.remote.webelement import WebElement
 
 logger = logging.getLogger(__name__)
 
@@ -18,22 +22,22 @@ class SelectorAutoCorrect:
         enabled: Whether auto-correction is enabled
     """
 
-    def __init__(self, enabled: bool = True):
-        self.enabled = enabled
-        self._provider = None
+    def __init__(self, enabled: bool = True) -> None:
+        self.enabled: bool = enabled
+        self._provider: Optional[AIProvider] = None
         self._correction_cache: Dict[str, str] = {}
         self._suggestion_cache: Dict[str, str] = {}
-        self.suggest_better_selectors = os.environ.get("SELENIUM_SUGGEST_BETTER", "0").lower() in ("1", "true", "yes")
-        self._confidence_threshold = 50
-        self._cache_enabled = True
+        self.suggest_better_selectors: bool = os.environ.get("SELENIUM_SUGGEST_BETTER", "0").lower() in ("1", "true", "yes")
+        self._confidence_threshold: int = 50
+        self._cache_enabled: bool = True
 
     @property
-    def provider(self):
+    def provider(self) -> AIProvider:
         if self._provider is None:
             self._provider = get_provider()
         return self._provider
 
-    def set_provider(self, provider) -> None:
+    def set_provider(self, provider: AIProvider) -> None:
         self._provider = provider
 
     def is_service_available(self) -> bool:
@@ -42,7 +46,7 @@ class SelectorAutoCorrect:
         provider = self.provider
         return provider is not None and provider.is_available()
 
-    def get_visible_elements_summary(self, driver) -> str:
+    def get_visible_elements_summary(self, driver: "WebDriver") -> str:
         try:
             script = """
             function getElementSummary() {
@@ -86,7 +90,13 @@ class SelectorAutoCorrect:
             logger.warning(f"Failed to get element summary: {e}")
             return "[]"
 
-    def suggest_selector(self, driver, failed_by: str, failed_value: str, error_message: str = "") -> Optional[Tuple[str, str]]:
+    def suggest_selector(
+        self,
+        driver: "WebDriver",
+        failed_by: str,
+        failed_value: str,
+        error_message: str = ""
+    ) -> Optional[Tuple[str, str]]:
         if not self.enabled or not self.is_service_available():
             return None
 
@@ -139,7 +149,13 @@ Suggest a working selector. Respond with ONLY a JSON object."""
             logger.warning(f"[AUTO-CORRECT] Failed to get suggestion: {e}")
         return None
 
-    def suggest_better_selector(self, driver, current_by: str, current_value: str, element) -> Optional[Tuple[str, str]]:
+    def suggest_better_selector(
+        self,
+        driver: "WebDriver",
+        current_by: str,
+        current_value: str,
+        element: "WebElement"
+    ) -> Optional[Tuple[str, str]]:
         if not self.suggest_better_selectors or not self.enabled or not self.is_service_available():
             return None
 
@@ -182,12 +198,12 @@ Available Elements:
                     if self._cache_enabled:
                         self._suggestion_cache[cache_key] = "OPTIMAL"
         except Exception as e:
-            logger.debug(f"[SUGGEST] Failed to get better selector: {e}")
+            logger.debug(f"[AUTO-SUGGEST] Failed to get better selector: {e}")
         return None
 
-    def _get_element_info(self, element) -> Dict[str, Any]:
+    def _get_element_info(self, element: "WebElement") -> Dict[str, Any]:
         try:
-            info = {
+            info: Dict[str, Any] = {
                 "tag": element.tag_name,
                 "id": element.get_attribute("id"),
                 "name": element.get_attribute("name"),
@@ -223,7 +239,7 @@ Available Elements:
             logger.warning(f"[AUTO-CORRECT] Error parsing suggestion: {e}")
         return None
 
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         self._correction_cache.clear()
         self._suggestion_cache.clear()
 
@@ -240,12 +256,16 @@ def get_auto_correct() -> SelectorAutoCorrect:
     return _auto_correct_instance
 
 
-def set_auto_correct_enabled(enabled: bool):
+def set_auto_correct_enabled(enabled: bool) -> None:
     """Enable or disable auto-correction globally."""
     get_auto_correct().enabled = enabled
 
 
-def configure_auto_correct(provider=None, enabled: bool = True, suggest_better: bool = False):
+def configure_auto_correct(
+    provider: Optional[AIProvider] = None,
+    enabled: bool = True,
+    suggest_better: bool = False
+) -> None:
     """Configure auto-correction settings."""
     auto_correct = get_auto_correct()
     auto_correct.enabled = enabled

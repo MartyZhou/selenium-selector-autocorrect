@@ -15,7 +15,7 @@ Environment Variables:
     SELENIUM_AUTO_UPDATE_TESTS: Auto-update test files with corrections (default: "0")
 """
 
-__version__ = "1.0.0"
+__version__ = "0.1.0"
 
 from .ai_providers import AIProvider, LocalAIProvider, configure_provider, get_provider
 from .auto_correct import (

@@ -3,7 +3,7 @@
 import logging
 import os
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import requests
 
@@ -40,9 +40,9 @@ class LocalAIProvider(AIProvider):
                   LOCAL_AI_API_URL environment variable (default: http://localhost:8765)
     """
 
-    def __init__(self, base_url: str = None):
-        self.base_url = base_url or os.environ.get("LOCAL_AI_API_URL", "http://localhost:8765")
-        self._available = None
+    def __init__(self, base_url: Optional[str] = None) -> None:
+        self.base_url: str = base_url or os.environ.get("LOCAL_AI_API_URL", "http://localhost:8765")
+        self._available: Optional[bool] = None
     
     def is_available(self) -> bool:
         if self._available is not None:
@@ -83,8 +83,9 @@ class LocalAIProvider(AIProvider):
                 timeout=30
             )
             response.raise_for_status()
-            data = response.json()
-            return data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            data: Dict[str, Any] = response.json()
+            content: Optional[str] = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            return content
         except requests.exceptions.HTTPError as e:
             if e.response.status_code == 503:
                 logger.info(f"Local AI service unavailable (503). Disabling auto-correction.")
@@ -110,7 +111,7 @@ def get_provider() -> AIProvider:
     return _provider_instance
 
 
-def configure_provider(provider: AIProvider):
+def configure_provider(provider: AIProvider) -> None:
     """Set a custom AI provider.
     
     Args:
@@ -120,4 +121,4 @@ def configure_provider(provider: AIProvider):
     _provider_instance = provider
 
 
-_provider_instance = None
+_provider_instance: Optional[AIProvider] = None

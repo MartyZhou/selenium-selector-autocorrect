@@ -48,14 +48,24 @@ class LocalAIProvider(AIProvider):
         if self._available is not None:
             return self._available
         try:
-            response = requests.post(
-                f"{self.base_url}/v1/chat/completions",
-                json={"messages": [{"role": "user", "content": "test"}], "max_tokens": 1},
-                timeout=5
-            )
+            url = f"{self.base_url}/v1/chat/completions"
+            payload = {"messages": [{"role": "user", "content": "test"}], "max_tokens": 1}
+            
+            logger.debug(f"[AI-REQUEST] POST {url}")
+            logger.debug(f"[AI-REQUEST] Payload: {payload}")
+            
+            response = requests.post(url, json=payload, timeout=30)
+            
+            logger.debug(f"[AI-RESPONSE] Status: {response.status_code}")
+            logger.debug(f"[AI-RESPONSE] Headers: {dict(response.headers)}")
+            logger.debug(f"[AI-RESPONSE] Body length: {len(response.text)} chars")
+            if response.text:
+                logger.debug(f"[AI-RESPONSE] Body preview: {response.text[:500]}")
+            
             self._available = response.status_code in (200, 400)
         except Exception as e:
             logger.info(f"Local AI service not available at {self.base_url}: {e}")
+            logger.debug(f"[AI-ERROR] Exception details: {type(e).__name__}: {str(e)}")
             self._available = False
         return self._available
     
@@ -70,23 +80,37 @@ class LocalAIProvider(AIProvider):
             AI response text or None if request fails
         """
         try:
-            response = requests.post(
-                f"{self.base_url}/v1/chat/completions",
-                json={
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt}
-                    ],
-                    "temperature": 0.3,
-                    "max_tokens": 500
-                },
-                timeout=30
-            )
+            url = f"{self.base_url}/v1/chat/completions"
+            payload = {
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                "temperature": 0.3,
+                "max_tokens": 500
+            }
+            
+            logger.debug(f"[AI-REQUEST] POST {url}")
+            logger.debug(f"[AI-REQUEST] System prompt ({len(system_prompt)} chars): {system_prompt[:200]}...")
+            logger.debug(f"[AI-REQUEST] User prompt ({len(user_prompt)} chars): {user_prompt[:200]}...")
+            logger.debug(f"[AI-REQUEST] Full payload: {payload}")
+            
+            response = requests.post(url, json=payload, timeout=30)
+            
+            logger.debug(f"[AI-RESPONSE] Status: {response.status_code}")
+            logger.debug(f"[AI-RESPONSE] Headers: {dict(response.headers)}")
+            logger.debug(f"[AI-RESPONSE] Body length: {len(response.text)} chars")
+            logger.debug(f"[AI-RESPONSE] Full body: {response.text[:2000]}")
+            
             response.raise_for_status()
             data: Dict[str, Any] = response.json()
             content: Optional[str] = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            logger.debug(f"[AI-PARSED] Content length: {len(content) if content else 0} chars")
+            logger.debug(f"[AI-PARSED] Content preview: {content[:500] if content else 'None'}")
             return content
         except requests.exceptions.HTTPError as e:
+            logger.error(f"[AI-ERROR] HTTP Error {e.response.status_code}")
+            logger.error(f"[AI-ERROR] Response body: {e.response.text[:1000]}")
             if e.response.status_code == 503:
                 logger.info(f"Local AI service unavailable (503). Disabling auto-correction.")
                 self._available = False
@@ -94,7 +118,8 @@ class LocalAIProvider(AIProvider):
                 logger.warning(f"Local AI HTTP error: {e}")
             return None
         except Exception as e:
-            logger.warning(f"Local AI request failed: {e}")
+            logger.error(f"[AI-ERROR] Request failed: {type(e).__name__}: {str(e)}")
+            logger.debug(f"[AI-ERROR] Exception details: {e}", exc_info=True)
             self._available = False
             return None
 

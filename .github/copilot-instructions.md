@@ -15,13 +15,27 @@ Selenium Selector AutoCorrect is a Python package that automatically corrects Se
 ## Repository Structure
 
 ```
-selector_autocorrect/
-├── __init__.py               # Public API exports
-├── auto_correct.py           # Core auto-correction logic
-├── ai_providers.py           # AI provider implementation (LocalAIProvider)
-├── correction_tracker.py     # Tracks and reports corrections
-├── wait_hook.py              # WebDriverWait hook installation
-└── py.typed                  # PEP 561 marker for type hints
+selenium-selector-autocorrect/
+├── src/
+│   └── selenium_selector_autocorrect/
+│       ├── __init__.py               # Public API exports, v0.1.2
+│       ├── auto_correct.py           # Core auto-correction logic
+│       ├── ai_providers.py           # AI provider implementation
+│       ├── correction_tracker.py     # Tracks and reports corrections
+│       ├── wait_hook.py              # WebDriverWait hook installation
+│       └── py.typed                  # PEP 561 marker for type hints
+├── tests/
+│   └── unit/                         # Unit tests (15 tests, 30.93% coverage)
+├── examples/
+│   ├── basic_usage.py
+│   └── tracking_corrections.py
+├── pyproject.toml                    # PEP 621 project config
+├── pytest.ini                        # Test configuration
+├── requirements.txt                  # Runtime dependencies
+├── requirements-dev.txt              # Development dependencies
+├── README.md                         # User-facing documentation
+├── CHANGELOG.md                      # Release notes and version history
+└── LICENSE                           # MIT License
 ```
 
 ## Development Guidelines
@@ -97,11 +111,11 @@ Environment variables:
 
 ```bash
 pytest
-pytest --cov=src/selenium_selector_autocorrect
-pytest tests/test_auto_correct.py
+pytest --cov=src/selenium_selector_autocorrect --cov-report=html
+pytest tests/unit/
 ```
 
-Test with actual WebDriver instances when possible, not just mocks, to catch integration issues.
+All 15 tests should pass. Test with actual WebDriver instances when possible, not just mocks, to catch integration issues.
 
 ## Common Pitfalls
 

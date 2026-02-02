@@ -35,22 +35,6 @@ element = WebDriverWait(driver, 10).until(
 )
 ```
 
-## AI Service Setup
-
-This package requires a local AI service with an OpenAI-compatible API. We recommend using **[VS Code Copilot as Service](https://marketplace.visualstudio.com/items?itemName=MartyZhou.vscode-copilot-as-service)**, which exposes GitHub Copilot through a local HTTP server.
-
-### Installing VS Code Copilot as Service
-
-1. Install from VS Code Marketplace or run:
-   ```bash
-   code --install-extension MartyZhou.vscode-copilot-as-service
-   ```
-
-2. The extension automatically starts a server on `http://localhost:8765`
-
-3. Requires an active GitHub Copilot subscription
-
-
 ## Configuration
 
 Configure via environment variables:
@@ -84,67 +68,28 @@ install_auto_correct_hook()
 
 ```python
 from selenium_selector_autocorrect import (
-    install_auto_correct_hook,
     get_auto_correct,
     get_correction_tracker,
-    export_corrections_report
+    export_corrections_report,
 )
-
-install_auto_correct_hook()
 
 auto_correct = get_auto_correct()
 auto_correct.enabled = True
-auto_correct.suggest_better_selectors = False
 
-# Export corrections report at end of test run
 tracker = get_correction_tracker()
 export_corrections_report("corrections_report.json")
-tracker = get_correction_tracker()
-export_corrections_report("corrections_report.json")
-
-print(f"Total corrections: {len(tracker.get_corrections())}")
-print(f"Successful corrections: {len(tracker.get_successful_corrections())}")
 ```
 
-### Custom AI Provider
+## AI Service Setup
 
-```python
-from selenium_selector_autocorrect import AIProvider, configure_provider
+This package requires a local AI service with an OpenAI-compatible API. The following endpoints are used:
 
-class CustomAIProvider(AIProvider):
-    def is_available(self) -> bool:
-        return True
-    
-    def suggest_selector(self, system_prompt: str, user_prompt: str):))
-```
+- `POST {LOCAL_AI_API_URL}/v1/chat/completions` — chat completions for suggestions
+- `POST {LOCAL_AI_API_URL}/v1/workspace/files/read` — read file content
+- `POST {LOCAL_AI_API_URL}/v1/workspace/files/edit` — apply edits to files
+- `POST {LOCAL_AI_API_URL}/v1/workspace/search` — search workspace
 
-## How It Works
-
-1. **Hook Installation**: Patches `WebDriverWait.until()` to add auto-correction
-2. **Timeout Detection**: When a selector times out, the original exception is caught
-3. **Page Analysis**: JavaScript extracts visible elements and their attributes
-4. **AI Suggestion**: Sends page context to AI provider for selector suggestion
-5. **Verification**: Tests the suggested selector
-6. **Success Handling**: If successful, records the correction and optionally updates the test file
-7. **Fallback**: If correction fails, raises the original TimeoutException
-
-## AI Provider Setup
-
-### Local AI Service
-
-The package requires a local AI service with OpenAI-compatible API:
-
-```bash
-POST http://localhost:8765/v1/chat/completions
-```
-
-For file auto-updates:
-```bash
-POST http://localhost:8765/v1/workspace/files/read
-POST http://localhost:8765/v1/workspace/files/edit
-## Correction Reports
-
-Export correction reports in JSON format:
+## Exporting Reports
 
 ```python
 from selenium_selector_autocorrect import export_corrections_report
@@ -153,6 +98,7 @@ export_corrections_report("corrections_report.json")
 ```
 
 Report format:
+
 ```json
 {
   "corrections": [
@@ -175,13 +121,13 @@ Report format:
 }
 ```
 
-## Best Practices
+## Troubleshooting
 
-1. **Install Once**: Call `install_auto_correct_hook()` once at test suite startup (e.g., in `conftest.py`)
-2. **Review Corrections**: Regularly review correction reports to identify brittle selectors
-3. **Update Tests**: Use auto-update sparingly and review changes before committing
-4. **Monitor AI Service**: Ensure your AI service is running and responsive
-5. **Use Strong Selectors**: The tool helps with failures but writing robust selectors is still preferred
+**AI service not available**: Ensure the local AI service is running and reachable via `LOCAL_AI_API_URL`.
+
+**Auto-update not running**: Verify `SELENIUM_AUTO_UPDATE_TESTS` is set to `"1"`.
+
+**Selector strings not found when updating**: Check quote styles in your source files match those used in the correction.
 
 ## Requirements
 
@@ -191,47 +137,10 @@ Report format:
 
 ## License
 
-MITInstall hook once at test suite startup (e.g., in conftest.py)
-2. Review correction reports regularly to identify brittle selectors
-3. Use auto-update sparingly and review changes before committing
-4. Ensure your AI service is running and responsive
-5. Write robust selectors - the tool helps with failures but prevention is better
+MIT
 
-When contributing:
-1. Follow PEP 8 style guidelines
-2. Add tests for new features
-3. Update documentation
-4. No emojis in code or documentation
+## Contributing
 
-## Troubleshooting
+Please follow PEP 8, add tests for new features, and update documentation when changing behavior.
 
-### AI Service Not Available
-
-Contributions are welcome! Please:
-1. Follow PEP 8 style guidelines
-2. Add tests for new features
-3. Update documentation
-4. Maintain consistency with existing code
-
-**Possible causes**:
-- `SELENIUM_AUTO_UPDATE_TESTS` not set to `"1"`
-- Test file path not detected correctly
-- Selector string not found in source file (check quotes)
-
-### No Corrections Happening
-Solution: Ensure your local AI service is running on the configured port.
-
-### Test File Not Updated
-
-Possible causes:
-- `SELENIUM_AUTO_UPDATE_TESTS` not set to "1"
-- Test file path not detected correctly
-- Selector string not found in source file
-
-### No Corrections Happening
-
-Check:
-1. Hook is installed - look for log message
-2. AI service is available - check `get_auto_correct().is_service_available()`
-3. Auto-correct is enabled - c
-See CHANGELOG.md for version history and changes.
+See [CHANGELOG.md](CHANGELOG.md) for release notes and version history.

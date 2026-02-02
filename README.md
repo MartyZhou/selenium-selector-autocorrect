@@ -87,7 +87,7 @@ This package requires a local AI service with an OpenAI-compatible API. The foll
 - `POST {LOCAL_AI_API_URL}/v1/chat/completions` — chat completions for suggestions
 - `POST {LOCAL_AI_API_URL}/v1/workspace/files/read` — read file content
 - `POST {LOCAL_AI_API_URL}/v1/workspace/files/edit` — apply edits to files
-- `POST {LOCAL_AI_API_URL}/v1/workspace/search` — search workspace
+- `POST {LOCAL_AI_API_URL}/v1/workspace/files/search` — search workspace
 
 ## Exporting Reports
 

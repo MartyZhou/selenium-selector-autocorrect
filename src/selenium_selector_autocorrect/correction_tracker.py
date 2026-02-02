@@ -242,7 +242,7 @@ class CorrectionTracker:
             # Use dedicated search endpoint (not the unified AI endpoint)
             search_url = f"{self._local_ai_url}/v1/workspace/files/search"
             # Prefer a narrower search first (avoids huge workspaces like venv), then fall back.
-            preferred_pattern = os.environ.get("SELENIUM_WORKSPACE_SEARCH_FILE_PATTERN", "automation_tools/**/*.py")
+            preferred_pattern = os.environ.get("SELENIUM_WORKSPACE_SEARCH_FILE_PATTERN", "src/**/*.py")
             patterns_to_try = [preferred_pattern, "**/*.py"]
             seen_patterns = set()
 

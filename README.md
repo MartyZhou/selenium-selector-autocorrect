@@ -144,3 +144,38 @@ MIT
 Please follow PEP 8, add tests for new features, and update documentation when changing behavior.
 
 See [CHANGELOG.md](CHANGELOG.md) for release notes and version history.
+
+## Publishing to PyPI
+
+Create a PyPI API token at https://pypi.org/manage/account/#api-tokens (recommended scope: project or account) and keep the token secret. PyPI no longer accepts username/password uploads — use the token as the password and `__token__` as the username.
+
+PowerShell (Windows) example:
+
+```powershell
+$env:TWINE_USERNAME='__token__'
+$env:TWINE_PASSWORD='pypi-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+.\venv\Scripts\python.exe -m pip install --upgrade build twine
+.\venv\Scripts\python.exe -m build
+.\venv\Scripts\python.exe -m twine upload dist/*
+```
+
+Unix / macOS example:
+
+```bash
+export TWINE_USERNAME='__token__'
+export TWINE_PASSWORD='pypi-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+python3 -m pip install --upgrade build twine
+python3 -m build
+python3 -m twine upload dist/*
+```
+
+To publish to TestPyPI (verify release first):
+
+```bash
+python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+```
+
+Notes:
+- Use an API token (not account password). If using a CI system, store the token in secure secrets.
+- You can add a persistent `~/.pypirc` for repeated uploads; see PyPI documentation for details.
+- If upload fails with a 403, verify the token is correct and has the required scope.
